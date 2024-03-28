@@ -1,4 +1,20 @@
-import { useRef, useState } from "react";
+import { useRef, useState , useEffect, useReducer } from "react";
+
+
+function blogsReducer(state,action){
+    switch(action.type){
+        case "ADD":
+            return[action.blog, ...state]
+            // the above is same as setBlogs
+        case "REMOVE":
+            return state.filter((blog,index)=>
+                index !== action.index
+            )
+        default: 
+            return []
+            // default retuen should be same for any case
+    }
+}
 
 //Blogging App using Hooks
 export default function Blog(){
@@ -7,27 +23,50 @@ export default function Blog(){
 
     // const [title,setTitle] = useState("")
     // const [description,setDecsription] = useState("")
-    const [blogs,setBlogs] = useState([]);
+    //const [blogs,setBlogs] = useState([]);
     const [formData,setformData] = useState({title:"",description:""})
     const titleRef = useRef(null) // Initial value is null
+    
+    const [blogs, dispatch] = useReducer(blogsReducer,[]);
+    // useReducer is used here to 
 
-        //Passing the synthetic event as argument to stop refreshing the page on submit
+
+    useEffect(()=>{
+        titleRef.current.focus();
+    },[]) // this is component did mount
+
+    useEffect(()=>{
+        if(blogs.length && blogs[0].title){
+            document.title = blogs[0].title
+        }else{
+            document.title = "No Bolgs"
+        }
+    },[blogs]) // this is component did update
+    // so whenever there is a change in blogs state then only this useEffect will run
+
+    //Passing the synthetic event (e) as argument to stop refreshing the page on submit
     function handleSubmit(e){
             e.preventDefault();
-            setBlogs([{title:formData.title, description:formData.description},...blogs])
+            //setBlogs([{title:formData.title, description:formData.description},...blogs])
             // ... This is a rest operator which will add everything in an object to the state
             console.log(blogs);
+
+            dispatch({type:"ADD",blog:{title:formData.title, description:formData.description},...blogs})
+            // Here we are using use reducers dispatch insted of setBlogs() from top
+
             setformData({title:"",description:""}) // to remove text from the 
             titleRef.current.focus(); // this will focus on title text everytime something is added to blogs
         }
     
     function removeBlog(i){
 
-       setBlogs(blogs.filter((blog,index) => 
-        i !== index
-       )
+    //    setBlogs(blogs.filter((blog,index) => 
+    //     i !== index
+    //    )
        // this function will remove blog which index mataches with the the passed index
-    )}
+
+       dispatch({type:"REMOVE",index:i})
+    }
 
 
 
